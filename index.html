@@ -37,6 +37,8 @@ const { useState, useMemo } = React;
 
 /* ── Stages (customer-facing only) ── */
 const STAGES = [
+  { id:'enablement',    name:'Enablement',    color:'--n600',          bgColor:'--n50',         emoji:'🛠️',
+    goal:'Internal prep — training, FAQ, legal, tracking, sales enablement' },
   { id:'awareness',     name:'Awareness',     color:'--blueberry-1000', bgColor:'--blueberry-50', emoji:'📡',
     goal:'Build visibility — social, community, blog, in-product education' },
   { id:'consideration', name:'Consideration',  color:'--mint-1000',      bgColor:'--mint-50',      emoji:'🔍',
@@ -47,10 +49,13 @@ const STAGES = [
     goal:'First discovery for clients — in-app, announcement, upsell push' },
   { id:'adoption',      name:'Adoption',       color:'--mustard-1000',   bgColor:'--mustard-50',   emoji:'🔄',
     goal:'Deepen usage — lifecycle CRM, engagement flows' },
+  { id:'ongoing',       name:'Ongoing usage',  color:'--sakura-1000',    bgColor:'--sakura-50',    emoji:'📊',
+    goal:'Payout, statements, ongoing usage monitoring, support' },
 ];
 
 /* ── Channel config ── */
 const CHANNELS = {
+  'Sales/CSD':   { icon:'🤝', color:'--peach-900',      bg:'--peach-50',   border:'--peach-100' },
   'CRM / Email':     { icon:'✉️',  color:'--mustard-900',    bg:'--mustard-50', border:'--mustard-100' },
   'Paid Ads':        { icon:'📢',  color:'--peach-1000',     bg:'--peach-50',   border:'--peach-100' },
   'Website':         { icon:'🌐',  color:'--mint-1000',      bg:'--mint-50',    border:'--mint-100' },
@@ -65,6 +70,28 @@ const CHANNELS = {
 /* audience: 'prospect' | 'client' */
 /* status: 'confirmed' | 'tbc' */
 const TOUCHPOINTS = [
+
+  /* ─── ENABLEMENT ─── */
+  { name:'Help Center update (cashback FAQ)',
+    channel:'Sales/CSD', stage:'enablement', audience:'client',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Prepare Help Center with cashback rules, payout, exclusions',
+    message:'Cashback rules, payout timing, exclusions, eligibility.' },
+
+  { name:'Sales & CSD enablement session',
+    channel:'Sales/CSD', stage:'enablement', audience:'client',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Train CS and Sales teams on cashback rules before launch',
+    message:'Cashback as acquisition and upsell lever.' },
+
+  { name:'Measurement & tracking setup',
+    channel:'In-product', stage:'enablement', audience:'client',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'UTMs, events, and dashboards reflect the full journey',
+    message:'All touchpoints trackable end-to-end.' },
 
   /* ─── AWARENESS ─── */
   { name:'Social post(s) (TBC)',
@@ -203,6 +230,21 @@ const TOUCHPOINTS = [
     status:'tbc', markets:'DE, ES, NL',
     objective:'Ongoing engagement touchpoint',
     message:'' },
+
+  /* ─── ONGOING USAGE ─── */
+  { name:'Cashback payout & statement notifications',
+    channel:'In-product', stage:'ongoing', audience:'client',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Ensure clients understand payout timing and see cashback in statements',
+    message:'Payout arrived — check your statement.' },
+
+  { name:'Post-launch monitoring dashboard',
+    channel:'In-product', stage:'ongoing', audience:'client',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Track adoption, usage, and support ticket volume post-launch',
+    message:'' },
 ];
 
 /* ── Helpers ── */
@@ -216,7 +258,7 @@ const audienceBg    = { prospect:'--peach-50',  client:'--blueberry-50' };
 
 /* ── Timeline helpers ── */
 const TIMELINE_START = new Date('2026-04-15');
-const TIMELINE_END   = new Date('2026-07-31');
+const TIMELINE_END   = new Date('2026-08-15');
 const TIMELINE_DAYS  = Math.round((TIMELINE_END - TIMELINE_START) / 86400000);
 function dayOffset(d){ return d ? Math.max(0, Math.round((new Date(d) - TIMELINE_START) / 86400000)) : null; }
 
@@ -311,12 +353,33 @@ function StatusToggle({ status, onToggle }) {
 function App() {
   const [filter, setFilter] = useState('all');
   const [hoveredTp, setHoveredTp] = useState(null);
-  const [touchpoints, setTouchpoints] = useState(() => TOUCHPOINTS.map((t,i) => ({...t, _id:i})));
+  const [shareMsg, setShareMsg] = useState('');
+  const [touchpoints, setTouchpoints] = useState(() => {
+    // Check URL hash for shared state
+    try {
+      const hash = window.location.hash;
+      if (hash.startsWith('#state=')) {
+        const decoded = JSON.parse(atob(hash.slice(7)));
+        return decoded.map((t,i) => ({...t, _id:i}));
+      }
+    } catch(e) {}
+    return TOUCHPOINTS.map((t,i) => ({...t, _id:i}));
+  });
   const [changeCount, setChangeCount] = useState(0);
 
   const updateTp = (id, patch) => {
     setTouchpoints(prev => prev.map(t => t._id === id ? {...t, ...patch} : t));
     setChangeCount(c => c + 1);
+  };
+
+  const shareState = () => {
+    const minimal = touchpoints.map(({_id, ...rest}) => rest);
+    const encoded = btoa(JSON.stringify(minimal));
+    const url = window.location.href.split('#')[0] + '#state=' + encoded;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareMsg('Link copied!');
+      setTimeout(() => setShareMsg(''), 2000);
+    });
   };
 
   const filtered = useMemo(() =>
@@ -350,22 +413,33 @@ function App() {
           Prospect &amp; client journey map &middot; {total} touchpoints across {STAGES.length} stages &middot;
           <span style={{ color:'#1B7D3A', fontWeight:600 }}> {confirmedTotal} confirmed</span>,
           <span style={{ color:'var(--blueberry-900)', fontWeight:600 }}> {tbcTotal} TBC</span>
-          &middot; DE, ES, NL &middot; Mai — Jul 2026 (live dates)
+          &middot; DE, ES, NL &middot; Mai — Aug 2026 (live dates)
         </p>
 
-        {/* Edit indicator */}
-        {changeCount > 0 && (
-          <div style={{
-            display:'inline-flex', alignItems:'center', gap:6,
-            padding:'5px 12px', borderRadius:8, marginBottom:10,
-            background:'var(--mustard-50)', border:'1px solid var(--mustard-100)',
-            fontSize:11, fontWeight:600, color:'var(--mustard-1000)',
+        {/* Edit indicator + Share button */}
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap', alignItems:'center', marginBottom:10 }}>
+          {changeCount > 0 && (
+            <div style={{
+              display:'inline-flex', alignItems:'center', gap:6,
+              padding:'5px 12px', borderRadius:8,
+              background:'var(--mustard-50)', border:'1px solid var(--mustard-100)',
+              fontSize:11, fontWeight:600, color:'var(--mustard-1000)',
+            }}>
+              <span style={{ width:6, height:6, borderRadius:6, background:'var(--mustard-900)' }} />
+              {changeCount} unsaved edit{changeCount>1?'s':''}
+              <span style={{ color:'var(--mustard-900)', fontWeight:500 }}>— click TBC dates or status badges to update</span>
+            </div>
+          )}
+          <button onClick={shareState} style={{
+            display:'inline-flex', alignItems:'center', gap:5,
+            padding:'5px 14px', borderRadius:8,
+            background:'var(--bk)', color:'var(--wh)',
+            fontSize:11, fontWeight:700, fontFamily:'var(--font)',
+            border:'none', cursor:'pointer',
           }}>
-            <span style={{ width:6, height:6, borderRadius:6, background:'var(--mustard-900)' }} />
-            {changeCount} unsaved edit{changeCount>1?'s':''}
-            <span style={{ color:'var(--mustard-900)', fontWeight:500 }}>— click TBC dates or status badges to update</span>
-          </div>
-        )}
+            🔗 {shareMsg || 'Share current state'}
+          </button>
+        </div>
 
         {/* Audience filter */}
         <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
@@ -523,9 +597,10 @@ function App() {
                 { label:'Mai', weeks:['5','12','19','26'] },
                 { label:'Juin', weeks:['2','9','16','23','30'] },
                 { label:'Juil', weeks:['7','14','21','28'] },
+                { label:'Août', weeks:['4','11'] },
               ].map((m,mi) => (
                 <div key={m.label} style={{
-                  flex:m.label==='Juin'?5:4,
+                  flex:m.label==='Juin'?5:(m.label==='Août'?2:4),
                   display:'flex', flexDirection:'column', alignItems:'center',
                   borderLeft: mi>0 ? '1px solid var(--n200)' : 'none',
                 }}>
@@ -541,14 +616,8 @@ function App() {
 
             {/* Channel rows */}
             {(() => {
-              const CHANNEL_ORDER = ['In-product','CRM / Email','Paid Ads','Website','SEO','Social','Community'];
-              const MONTHS = [
-                { start:'2026-04-01', days:30 },
-                { start:'2026-05-01', days:31 },
-                { start:'2026-06-01', days:30 },
-                { start:'2026-07-01', days:31 },
-              ];
-              const totalDays = 107; // Apr 15 → Jul 31
+              const CHANNEL_ORDER = ['Sales/CSD','In-product','CRM / Email','Paid Ads','Website','SEO','Social','Community'];
+              const totalDays = 122; // Apr 15 → Aug 15
               const pct = (d) => {
                 if (!d) return null;
                 const diff = Math.round((new Date(d) - new Date('2026-04-15')) / 86400000);
@@ -560,7 +629,7 @@ function App() {
                 const chTps = filtered.filter(t=>t.channel===ch);
                 const dated = chTps.filter(t=>t.dateStart);
                 const undated = chTps.filter(t=>!t.dateStart);
-                const rowHeight = Math.max(dated.length, 1) * 28 + (undated.length > 0 ? 22 : 0) + 8;
+                const rowHeight = Math.max(dated.length, 1) * 32 + (undated.length > 0 ? 22 : 0) + 8;
 
                 return (
                   <React.Fragment key={ch}>
@@ -586,8 +655,7 @@ function App() {
                       backgroundPosition:'left top',
                     }}>
                       {/* Month dividers */}
-                      {/* Month dividers: May→Jun (day 16), Jun→Jul (day 47) from Apr 15 start */}
-                      {[16, 47].map(d => (
+                      {[16, 47, 78].map(d => (
                         <div key={d} style={{
                           position:'absolute', left:`${(d/totalDays)*100}%`, top:0, bottom:0,
                           borderLeft:'1px solid var(--n200)',
@@ -603,24 +671,23 @@ function App() {
                         const sb = statusBadge(tp.status);
                         return (
                           <div key={idx} style={{
-                            position:'absolute', top: idx * 28 + 4,
-                            left:`${left}%`, width:`${barWidth}%`, minWidth:90,
-                            height:24, borderRadius:5,
+                            position:'absolute', top: idx * 32 + 4,
+                            left:`${left}%`, width:`${barWidth}%`, minWidth:'max-content',
+                            height:28, borderRadius:5,
                             background:`var(${stageObj?.bgColor || '--n100'})`,
                             border: tp.status==='confirmed'
                               ? `1.5px solid var(${stageObj?.color || '--n400'})`
                               : `1.5px dashed var(${stageObj?.color || '--n400'})`,
                             display:'flex', alignItems:'center', gap:4, paddingLeft:6, paddingRight:4,
-                            overflow:'hidden', zIndex:2,
+                            zIndex:2,
                           }}>
                             <span style={{
                               width:6, height:6, borderRadius:6, flexShrink:0,
                               background: sb.dot,
                             }} />
                             <span style={{
-                              fontSize:10, fontWeight:700,
+                              fontSize:11, fontWeight:700,
                               color:`var(${stageObj?.color || '--n600'})`,
-                              whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
                               flex:1,
                             }}>{tp.name}</span>
                             <span style={{
