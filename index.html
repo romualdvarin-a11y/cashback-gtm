@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cashback — Journey map</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bk:#050505;--wh:#FFFFFF;
+  --n25:#F9F9F9;--n50:#F5F5F5;--n100:#E8E8E8;--n200:#E0E0E0;--n300:#CCCCCC;
+  --n400:#B8B8B8;--n500:#8F8F8F;--n600:#616161;
+  --blueberry-50:#C6E6FB;--blueberry-100:#9BC5EA;--blueberry-800:#71A5E0;--blueberry-900:#3275C4;--blueberry-1000:#093B75;
+  --peach-50:#FFC9A6;--peach-100:#FFB590;--peach-800:#FF9E75;--peach-900:#CE6033;--peach-1000:#7A250C;
+  --plum-50:#D5C8FF;--plum-100:#BFA6EA;--plum-800:#A585DB;--plum-900:#7B4DB8;--plum-1000:#461068;
+  --mustard-50:#FAFFA4;--mustard-100:#F5F596;--mustard-800:#F0E060;--mustard-900:#C5A635;--mustard-1000:#705208;
+  --mint-50:#C8FFEC;--mint-100:#9BE5DA;--mint-800:#66C8C8;--mint-900:#2F95A0;--mint-1000:#0D5563;
+  --sakura-50:#FFDFEA;--sakura-100:#FFACD6;--sakura-800:#E975B2;--sakura-900:#C24B89;--sakura-1000:#7E0F4C;
+  --font:'Manrope',Arial,sans-serif;
+}
+body{font-family:var(--font);background:var(--n25);color:var(--bk);font-size:14px;font-weight:500;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--n300);border-radius:3px}
+@media print{body{background:#fff} .no-print{display:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState, useMemo } = React;
+
+/* ── Stages (customer-facing only) ── */
+const STAGES = [
+  { id:'awareness',     name:'Awareness',     color:'--blueberry-1000', bgColor:'--blueberry-50', emoji:'📡',
+    goal:'Build visibility — social, community, blog, in-product education' },
+  { id:'consideration', name:'Consideration',  color:'--mint-1000',      bgColor:'--mint-50',      emoji:'🔍',
+    goal:'Educate prospects — LP, pricing, comparators, SEO' },
+  { id:'conversion',    name:'Conversion',     color:'--peach-1000',     bgColor:'--peach-50',     emoji:'🎯',
+    goal:'Drive action — paid ads, retargeting, lead nurture' },
+  { id:'activation',    name:'Activation',     color:'--plum-1000',      bgColor:'--plum-50',      emoji:'⚡',
+    goal:'First discovery for clients — in-app, announcement, upsell push' },
+  { id:'adoption',      name:'Adoption',       color:'--mustard-1000',   bgColor:'--mustard-50',   emoji:'🔄',
+    goal:'Deepen usage — lifecycle CRM, engagement flows' },
+];
+
+/* ── Channel config ── */
+const CHANNELS = {
+  'CRM / Email':     { icon:'✉️',  color:'--mustard-900',    bg:'--mustard-50', border:'--mustard-100' },
+  'Paid Ads':        { icon:'📢',  color:'--peach-1000',     bg:'--peach-50',   border:'--peach-100' },
+  'Website':         { icon:'🌐',  color:'--mint-1000',      bg:'--mint-50',    border:'--mint-100' },
+  'SEO':             { icon:'🔍',  color:'--mint-900',       bg:'--mint-50',    border:'--mint-100' },
+  'Social':          { icon:'📱',  color:'--sakura-1000',    bg:'--sakura-50',  border:'--sakura-100' },
+  'Community':       { icon:'👥',  color:'--sakura-900',     bg:'--sakura-50',  border:'--sakura-100' },
+  'In-product':      { icon:'💬',  color:'--blueberry-1000', bg:'--blueberry-50',border:'--blueberry-100' },
+};
+
+/* ── Touchpoints — synced from Notion DB 7 Apr 2026 ── */
+/* Live dates only (no kickoff dates) */
+/* audience: 'prospect' | 'client' */
+/* status: 'confirmed' | 'tbc' */
+const TOUCHPOINTS = [
+
+  /* ─── AWARENESS ─── */
+  { name:'Social post(s) (TBC)',
+    channel:'Social', stage:'awareness', audience:'prospect',
+    date:'TBC — 31 mai', dateStart:null, dateEnd:'2026-05-31',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Build awareness post-launch, support organic reach',
+    message:'Cashback linked to card level. Rate/cap, payout timing, exclusions.' },
+
+  { name:'QontoClub posts by PMM',
+    channel:'Community', stage:'awareness', audience:'client',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'confirmed', markets:'DE, ES',
+    objective:'Reinforce understanding of cashback rules post-launch',
+    message:'Reminder + how it works. Rate, cap, payout timing, exclusions.' },
+
+  { name:'Blog article',
+    channel:'SEO', stage:'awareness', audience:'prospect',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'SEO-driven awareness content',
+    message:'' },
+
+  { name:'In-product education touchpoint (TBC by PMM)',
+    channel:'In-product', stage:'awareness', audience:'client',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Explain cashback in-product, reduce questions',
+    message:'TBD by PMM (what users should understand + next action)' },
+
+  /* ─── CONSIDERATION ─── */
+  { name:'New cashback landing page (LP)',
+    channel:'Website', stage:'consideration', audience:'prospect',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Convert paid/SEO traffic with clear, compliant cashback narrative',
+    message:'Earn cashback on eligible card spend — rate, cap, payout timing, exclusions.' },
+
+  { name:'Cashback callout & banners on card pages',
+    channel:'Website', stage:'consideration', audience:'prospect',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Make cashback visible on card pages without inconsistency',
+    message:'Cashback benefit linked to card level (rate/cap vary).' },
+
+  { name:'Comparator pages (SEO + ownership)',
+    channel:'SEO', stage:'consideration', audience:'prospect',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Support acquisition with compliant cashback positioning',
+    message:'Clear, comparable value story. Rate, cap, exclusions.' },
+
+  { name:'Pricing page update (cashback)',
+    channel:'Website', stage:'consideration', audience:'prospect',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Reflect cashback availability on pricing pages',
+    message:'Rate and cap depend on card level and market.' },
+
+  /* ─── CONVERSION ─── */
+  { name:'Static ads (multi-format)',
+    channel:'Paid Ads', stage:'conversion', audience:'prospect',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Drive qualified traffic with simple, compliant promise',
+    message:'Cashback on eligible spend — clear rate and cap.' },
+
+  { name:'Retargeting ads (cashback)',
+    channel:'Paid Ads', stage:'conversion', audience:'prospect',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Bring back visitors who saw cashback content but didn\'t convert',
+    message:'Cashback available with Qonto cards (up to 1%). See details.' },
+
+  { name:'Lead nurture email(s)',
+    channel:'CRM / Email', stage:'conversion', audience:'prospect',
+    date:'14 mai', dateStart:'2026-05-14', dateEnd:'2026-05-14',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Convert interested leads with clear, compliant cashback promise',
+    message:'Earn cashback on eligible spend — rate, cap, payout timing, exclusions.' },
+
+  /* ─── ACTIVATION ─── */
+  { name:'In-app discovery message (Braze)',
+    channel:'In-product', stage:'activation', audience:'client',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Close awareness gap by making cashback visible in-product',
+    message:'Cashback is now an in-product benefit tied to card level. Check your rate and cap.' },
+
+  { name:'Cashback details page (in-app)',
+    channel:'In-product', stage:'activation', audience:'client',
+    date:'6 mai', dateStart:'2026-05-06', dateEnd:'2026-05-06',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Single in-app reference for cashback rules; link destination for CRM/website',
+    message:'Clear rate, cap, timing, exclusions. Calculated on settled eligible transactions.' },
+
+  { name:'Announcement Email (Plus & X cardholders)',
+    channel:'CRM / Email', stage:'activation', audience:'client',
+    date:'14 mai', dateStart:'2026-05-14', dateEnd:'2026-05-14',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Announce cashback to eligible existing cardholders',
+    message:'Cashback rules — rate, cap, payout timing, exclusions + next action.' },
+
+  { name:'Card Upsell (One) — Push',
+    channel:'CRM / Email', stage:'activation', audience:'client',
+    date:'21 mai', dateStart:'2026-05-21', dateEnd:'2026-05-21',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Drive card upgrade for One-plan clients',
+    message:'Upgrade to unlock cashback.' },
+
+  { name:'Card Upsell / Announcement (One) — Email',
+    channel:'CRM / Email', stage:'activation', audience:'client',
+    date:'14 mai', dateStart:'2026-05-14', dateEnd:'2026-05-14',
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Announce cashback + upsell path for One-plan clients',
+    message:'Cashback available on higher card levels.' },
+
+  /* ─── ADOPTION ─── */
+  { name:'CRM Lifecycle — Update existing flows',
+    channel:'CRM / Email', stage:'adoption', audience:'client',
+    date:'19 juin', dateStart:'2026-06-19', dateEnd:'2026-06-19',
+    status:'confirmed', markets:'DE, ES, NL',
+    objective:'Embed cashback into existing upsell lifecycle flows',
+    message:'' },
+
+  { name:'CRM Lifecycle — Update standalone flow',
+    channel:'CRM / Email', stage:'adoption', audience:'client',
+    date:'10 juil', dateStart:'2026-07-10', dateEnd:'2026-07-10',
+    status:'confirmed', markets:'',
+    objective:'Create new standalone cashback lifecycle flow',
+    message:'Repay your higher card' },
+
+  { name:'Lifecycle — Engagement',
+    channel:'CRM / Email', stage:'adoption', audience:'client',
+    date:'TBC', dateStart:null, dateEnd:null,
+    status:'tbc', markets:'DE, ES, NL',
+    objective:'Ongoing engagement touchpoint',
+    message:'' },
+];
+
+/* ── Helpers ── */
+const statusBadge = (s) => s === 'confirmed'
+  ? { label:'Confirmed', bg:'#E6F4EA', color:'#1B7D3A', dot:'#34A853' }
+  : { label:'TBC',       bg:'#E8F0FE', color:'#3275C4', dot:'#71A5E0' };
+
+const audienceLabel = { prospect:'Prospect', client:'Client' };
+const audienceColor = { prospect:'--peach-900', client:'--blueberry-900' };
+const audienceBg    = { prospect:'--peach-50',  client:'--blueberry-50' };
+
+/* ── Timeline helpers ── */
+const TIMELINE_START = new Date('2026-04-15');
+const TIMELINE_END   = new Date('2026-07-31');
+const TIMELINE_DAYS  = Math.round((TIMELINE_END - TIMELINE_START) / 86400000);
+function dayOffset(d){ return d ? Math.max(0, Math.round((new Date(d) - TIMELINE_START) / 86400000)) : null; }
+
+/* ── Editable date input ── */
+function DateEditor({ value, onChange }) {
+  const [editing, setEditing] = useState(false);
+  const [startVal, setStartVal] = useState('');
+  const [endVal, setEndVal] = useState('');
+
+  const openEditor = () => {
+    setStartVal(value.dateStart || '');
+    setEndVal(value.dateEnd || '');
+    setEditing(true);
+  };
+
+  const save = () => {
+    const fmt = (iso) => {
+      if (!iso) return '';
+      const d = new Date(iso + 'T00:00:00');
+      const day = d.getDate();
+      const months = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+      return `${day} ${months[d.getMonth()]}`;
+    };
+    const label = startVal && endVal && startVal !== endVal
+      ? `${fmt(startVal)} — ${fmt(endVal)}`
+      : startVal ? fmt(startVal) : 'TBC';
+    onChange({ date: label, dateStart: startVal || null, dateEnd: endVal || null });
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div style={{
+        display:'flex', gap:3, alignItems:'center', flexWrap:'wrap',
+        padding:'3px 0',
+      }}>
+        <input type="date" value={startVal} onChange={e=>setStartVal(e.target.value)}
+          style={{ fontSize:10, fontFamily:'var(--font)', fontWeight:600, padding:'2px 4px',
+            border:'1.5px solid var(--blueberry-800)', borderRadius:4, width:110,
+            background:'var(--blueberry-50)', color:'var(--blueberry-1000)' }} />
+        <span style={{ fontSize:10, color:'var(--n400)' }}>to</span>
+        <input type="date" value={endVal} onChange={e=>setEndVal(e.target.value)}
+          style={{ fontSize:10, fontFamily:'var(--font)', fontWeight:600, padding:'2px 4px',
+            border:'1.5px solid var(--blueberry-800)', borderRadius:4, width:110,
+            background:'var(--blueberry-50)', color:'var(--blueberry-1000)' }} />
+        <button onClick={save} style={{
+          fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:4,
+          border:'none', background:'var(--bk)', color:'var(--wh)',
+          cursor:'pointer', fontFamily:'var(--font)',
+        }}>OK</button>
+        <button onClick={()=>setEditing(false)} style={{
+          fontSize:10, fontWeight:600, padding:'2px 6px', borderRadius:4,
+          border:'1px solid var(--n300)', background:'var(--wh)', color:'var(--n500)',
+          cursor:'pointer', fontFamily:'var(--font)',
+        }}>Cancel</button>
+      </div>
+    );
+  }
+
+  const isTbc = !value.dateStart;
+  return (
+    <span onClick={openEditor} title="Click to set date" style={{
+      fontSize:10, fontWeight:600, padding:'1px 6px', borderRadius:4,
+      background: isTbc ? 'var(--blueberry-50)' : 'var(--n50)',
+      color: isTbc ? 'var(--blueberry-900)' : 'var(--n600)',
+      fontStyle: isTbc ? 'italic' : 'normal',
+      cursor:'pointer', border: isTbc ? '1px dashed var(--blueberry-800)' : '1px solid transparent',
+      transition:'all .12s',
+    }}>
+      {value.date}{isTbc ? ' (click to set)' : ''}
+    </span>
+  );
+}
+
+/* ── Status toggle ── */
+function StatusToggle({ status, onToggle }) {
+  const sb = statusBadge(status);
+  return (
+    <span onClick={onToggle} title="Click to toggle status" style={{
+      fontSize:10, fontWeight:700, padding:'1px 6px', borderRadius:4,
+      background:sb.bg, color:sb.color,
+      display:'inline-flex', alignItems:'center', gap:3,
+      cursor:'pointer', transition:'all .12s',
+      border: status==='tbc' ? '1px dashed var(--blueberry-800)' : '1px solid transparent',
+    }}>
+      <span style={{ width:5, height:5, borderRadius:5, background:sb.dot, display:'inline-block' }} />
+      {sb.label}
+    </span>
+  );
+}
+
+function App() {
+  const [filter, setFilter] = useState('all');
+  const [hoveredTp, setHoveredTp] = useState(null);
+  const [touchpoints, setTouchpoints] = useState(() => TOUCHPOINTS.map((t,i) => ({...t, _id:i})));
+  const [changeCount, setChangeCount] = useState(0);
+
+  const updateTp = (id, patch) => {
+    setTouchpoints(prev => prev.map(t => t._id === id ? {...t, ...patch} : t));
+    setChangeCount(c => c + 1);
+  };
+
+  const filtered = useMemo(() =>
+    filter === 'all' ? touchpoints : touchpoints.filter(t => t.audience === filter),
+    [filter, touchpoints]
+  );
+
+  const stageData = useMemo(() => STAGES.map(stage => {
+    const tps = filtered.filter(t => t.stage === stage.id);
+    const byChannel = {};
+    tps.forEach(t => { (byChannel[t.channel] = byChannel[t.channel] || []).push(t); });
+    return { ...stage, byChannel, total: tps.length,
+      confirmed: tps.filter(t=>t.status==='confirmed').length,
+      tbc: tps.filter(t=>t.status==='tbc').length,
+    };
+  }), [filtered]);
+
+  const total = filtered.length;
+  const confirmedTotal = filtered.filter(t=>t.status==='confirmed').length;
+  const tbcTotal = total - confirmedTotal;
+
+  return (
+    <div style={{ minHeight:'100vh', padding:'28px 24px' }}>
+      {/* ── Header ── */}
+      <div style={{ maxWidth:1680, margin:'0 auto', marginBottom:20 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
+          <span style={{ fontSize:24 }}>💶</span>
+          <h1 style={{ fontSize:21, fontWeight:800, letterSpacing:'-0.4px' }}>Cashback — X / Plus cards — Campaign journey</h1>
+        </div>
+        <p style={{ color:'var(--n500)', fontSize:13, maxWidth:720, marginBottom:14, lineHeight:1.6 }}>
+          Prospect &amp; client journey map &middot; {total} touchpoints across {STAGES.length} stages &middot;
+          <span style={{ color:'#1B7D3A', fontWeight:600 }}> {confirmedTotal} confirmed</span>,
+          <span style={{ color:'var(--blueberry-900)', fontWeight:600 }}> {tbcTotal} TBC</span>
+          &middot; DE, ES, NL &middot; Mai — Jul 2026 (live dates)
+        </p>
+
+        {/* Edit indicator */}
+        {changeCount > 0 && (
+          <div style={{
+            display:'inline-flex', alignItems:'center', gap:6,
+            padding:'5px 12px', borderRadius:8, marginBottom:10,
+            background:'var(--mustard-50)', border:'1px solid var(--mustard-100)',
+            fontSize:11, fontWeight:600, color:'var(--mustard-1000)',
+          }}>
+            <span style={{ width:6, height:6, borderRadius:6, background:'var(--mustard-900)' }} />
+            {changeCount} unsaved edit{changeCount>1?'s':''}
+            <span style={{ color:'var(--mustard-900)', fontWeight:500 }}>— click TBC dates or status badges to update</span>
+          </div>
+        )}
+
+        {/* Audience filter */}
+        <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          {[
+            { key:'all',      label:'All touchpoints', count: touchpoints.length },
+            { key:'prospect', label:'Prospect journey', count: touchpoints.filter(t=>t.audience==='prospect').length },
+            { key:'client',   label:'Client journey',   count: touchpoints.filter(t=>t.audience==='client').length },
+          ].map(f => (
+            <button key={f.key} onClick={()=>setFilter(f.key)} style={{
+              padding:'5px 14px', borderRadius:20, fontSize:12, fontWeight:700,
+              fontFamily:'var(--font)', cursor:'pointer', transition:'all .15s',
+              border: filter===f.key ? '2px solid var(--bk)' : '1.5px solid var(--n200)',
+              background: filter===f.key ? 'var(--bk)' : 'var(--wh)',
+              color: filter===f.key ? 'var(--wh)' : 'var(--n600)',
+            }}>
+              {f.label} ({f.count})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Stage columns ── */}
+      <div style={{ maxWidth:1680, margin:'0 auto', overflowX:'auto', paddingBottom:16 }}>
+        {/* Headers */}
+        <div style={{ display:'flex', gap:6, marginBottom:10, minWidth:1100 }}>
+          {stageData.map((s,i) => (
+            <React.Fragment key={s.id}>
+              <div style={{ flex:1, minWidth:200 }}>
+                <div style={{
+                  background:`var(${s.bgColor})`, borderRadius:10, padding:'10px 14px',
+                }}>
+                  <div style={{ fontSize:13, fontWeight:800, color:`var(${s.color})`, display:'flex', alignItems:'center', gap:5 }}>
+                    <span style={{ fontSize:14 }}>{s.emoji}</span> {s.name}
+                  </div>
+                  <div style={{ fontSize:11, color:`var(${s.color})`, opacity:0.65, marginTop:2 }}>
+                    {s.total} touchpoint{s.total!==1?'s':''} &middot; {s.confirmed} confirmed &middot; {s.tbc} TBC
+                  </div>
+                  <div style={{ fontSize:10, color:`var(${s.color})`, opacity:0.5, marginTop:3, lineHeight:1.3, fontStyle:'italic' }}>
+                    {s.goal}
+                  </div>
+                </div>
+              </div>
+              {i < stageData.length-1 && (
+                <div style={{ display:'flex', alignItems:'center', flexShrink:0, width:16, color:'var(--n300)', fontSize:16, fontWeight:300 }}>›</div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Channel cards per stage */}
+        <div style={{ display:'flex', gap:6, alignItems:'flex-start', minWidth:1100 }}>
+          {stageData.map((stage,i) => (
+            <React.Fragment key={stage.id}>
+              <div style={{ flex:1, minWidth:200, display:'flex', flexDirection:'column', gap:6 }}>
+                {Object.entries(stage.byChannel).map(([ch, tps]) => {
+                  const cfg = CHANNELS[ch] || { icon:'📋', color:'--n600', bg:'--n50', border:'--n200' };
+                  return (
+                    <div key={ch} style={{
+                      borderRadius:10, overflow:'hidden',
+                      border:`1px solid var(${cfg.border})`, background:'var(--wh)',
+                    }}>
+                      <div style={{
+                        background:`var(${cfg.bg})`, padding:'6px 11px',
+                        display:'flex', alignItems:'center', gap:5,
+                        borderBottom:`1px solid var(${cfg.border})`,
+                      }}>
+                        <span style={{ fontSize:12 }}>{cfg.icon}</span>
+                        <span style={{ fontSize:11, fontWeight:700, color:`var(${cfg.color})`, letterSpacing:'0.2px' }}>{ch}</span>
+                      </div>
+                      <div style={{ padding:4, display:'flex', flexDirection:'column', gap:3 }}>
+                        {tps.map((tp,j) => {
+                          const isHovered = hoveredTp === tp._id;
+                          return (
+                            <div key={tp._id}
+                              onMouseEnter={()=>setHoveredTp(tp._id)}
+                              onMouseLeave={()=>setHoveredTp(null)}
+                              style={{
+                                padding:'7px 9px', borderRadius:6, cursor:'default',
+                                border: tp.status==='confirmed' ? '1px solid var(--n200)' : '1px dashed var(--n300)',
+                                background: isHovered ? 'var(--n50)' : tp.status==='confirmed' ? 'var(--n25)' : 'var(--wh)',
+                                transition:'background .12s',
+                              }}>
+                              <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, color:'var(--bk)', marginBottom:4 }}>
+                                {tp.name}
+                              </div>
+                              <div style={{ display:'flex', gap:4, flexWrap:'wrap', alignItems:'center' }}>
+                                <span style={{
+                                  fontSize:10, fontWeight:700, padding:'1px 6px', borderRadius:4,
+                                  background:`var(${audienceBg[tp.audience]})`,
+                                  color:`var(${audienceColor[tp.audience]})`,
+                                }}>
+                                  {audienceLabel[tp.audience]}
+                                </span>
+                                <StatusToggle status={tp.status}
+                                  onToggle={()=>updateTp(tp._id, { status: tp.status==='tbc'?'confirmed':'tbc' })} />
+                                <DateEditor
+                                  value={{ date:tp.date, dateStart:tp.dateStart, dateEnd:tp.dateEnd }}
+                                  onChange={(patch)=>updateTp(tp._id, patch)} />
+                              </div>
+                              {tp.markets && (
+                                <div style={{ fontSize:10, color:'var(--n400)', marginTop:3 }}>{tp.markets}</div>
+                              )}
+                              {isHovered && tp.objective && (
+                                <div style={{
+                                  marginTop:5, padding:'5px 8px', borderRadius:5,
+                                  background:'var(--n50)', border:'1px solid var(--n100)',
+                                  fontSize:11, color:'var(--n600)', lineHeight:1.35,
+                                }}>
+                                  <strong style={{ color:'var(--bk)' }}>Objective:</strong> {tp.objective}
+                                  {tp.message && <><br/><strong style={{ color:'var(--bk)' }}>Key message:</strong> {tp.message}</>}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+                {stage.total === 0 && (
+                  <div style={{
+                    padding:20, textAlign:'center',
+                    border:'1.5px dashed var(--n200)', borderRadius:10,
+                    color:'var(--n400)', fontSize:12,
+                  }}>
+                    No touchpoints{filter !== 'all' ? ` for ${filter}s` : ''}
+                  </div>
+                )}
+              </div>
+              {i < stageData.length-1 && <div style={{ width:16, flexShrink:0 }} />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Timeline by channel ── */}
+      <div style={{ maxWidth:1680, margin:'16px auto 0' }}>
+        <div style={{
+          padding:'16px 18px', borderRadius:10,
+          background:'var(--wh)', border:'1px solid var(--n100)',
+        }}>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--n500)', textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:12 }}>
+            Timeline by channel
+          </div>
+
+          {/* Gantt-style table */}
+          <div style={{ display:'grid', gridTemplateColumns:'160px 1fr', gap:0 }}>
+
+            {/* Column headers: channel label + month grid */}
+            <div style={{ borderBottom:'1px solid var(--n200)', paddingBottom:6, marginBottom:2 }}>
+              <span style={{ fontSize:10, fontWeight:700, color:'var(--n400)' }}>CHANNEL</span>
+            </div>
+            <div style={{ display:'flex', borderBottom:'1px solid var(--n200)', paddingBottom:6, marginBottom:2 }}>
+              {[
+                { label:'Mai', weeks:['5','12','19','26'] },
+                { label:'Juin', weeks:['2','9','16','23','30'] },
+                { label:'Juil', weeks:['7','14','21','28'] },
+              ].map((m,mi) => (
+                <div key={m.label} style={{
+                  flex:m.label==='Juin'?5:4,
+                  display:'flex', flexDirection:'column', alignItems:'center',
+                  borderLeft: mi>0 ? '1px solid var(--n200)' : 'none',
+                }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:'var(--bk)' }}>{m.label}</span>
+                  <div style={{ display:'flex', gap:0, width:'100%', justifyContent:'space-around', marginTop:2 }}>
+                    {m.weeks.map(w => (
+                      <span key={w} style={{ fontSize:9, color:'var(--n400)', fontWeight:500 }}>{w}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Channel rows */}
+            {(() => {
+              const CHANNEL_ORDER = ['In-product','CRM / Email','Paid Ads','Website','SEO','Social','Community'];
+              const MONTHS = [
+                { start:'2026-04-01', days:30 },
+                { start:'2026-05-01', days:31 },
+                { start:'2026-06-01', days:30 },
+                { start:'2026-07-01', days:31 },
+              ];
+              const totalDays = 107; // Apr 15 → Jul 31
+              const pct = (d) => {
+                if (!d) return null;
+                const diff = Math.round((new Date(d) - new Date('2026-04-15')) / 86400000);
+                return Math.max(0, Math.min(100, (diff / totalDays) * 100));
+              };
+
+              return CHANNEL_ORDER.filter(ch => filtered.some(t=>t.channel===ch)).map(ch => {
+                const cfg = CHANNELS[ch] || { icon:'📋', color:'--n600', bg:'--n50', border:'--n200' };
+                const chTps = filtered.filter(t=>t.channel===ch);
+                const dated = chTps.filter(t=>t.dateStart);
+                const undated = chTps.filter(t=>!t.dateStart);
+                const rowHeight = Math.max(dated.length, 1) * 28 + (undated.length > 0 ? 22 : 0) + 8;
+
+                return (
+                  <React.Fragment key={ch}>
+                    {/* Channel label */}
+                    <div style={{
+                      display:'flex', alignItems:'flex-start', gap:5, paddingTop:8,
+                      borderBottom:'1px solid var(--n100)', paddingBottom:8,
+                      minHeight: rowHeight,
+                    }}>
+                      <span style={{ fontSize:13 }}>{cfg.icon}</span>
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:700, color:`var(${cfg.color})` }}>{ch}</div>
+                        <div style={{ fontSize:10, color:'var(--n400)' }}>{chTps.length} TP{chTps.length>1?'s':''}</div>
+                      </div>
+                    </div>
+
+                    {/* Bars area */}
+                    <div style={{
+                      position:'relative', borderBottom:'1px solid var(--n100)',
+                      minHeight: rowHeight, paddingTop:6,
+                      backgroundImage:'linear-gradient(90deg, var(--n100) 1px, transparent 1px)',
+                      backgroundSize:`${100/4}% 100%`,
+                      backgroundPosition:'left top',
+                    }}>
+                      {/* Month dividers */}
+                      {/* Month dividers: May→Jun (day 16), Jun→Jul (day 47) from Apr 15 start */}
+                      {[16, 47].map(d => (
+                        <div key={d} style={{
+                          position:'absolute', left:`${(d/totalDays)*100}%`, top:0, bottom:0,
+                          borderLeft:'1px solid var(--n200)',
+                        }} />
+                      ))}
+
+                      {/* Dated bars */}
+                      {dated.map((tp, idx) => {
+                        const left = pct(tp.dateStart);
+                        const endPct = pct(tp.dateEnd || tp.dateStart);
+                        const barWidth = Math.max(endPct - left + (0.8/totalDays*100), 2.5);
+                        const stageObj = STAGES.find(s=>s.id===tp.stage);
+                        const sb = statusBadge(tp.status);
+                        return (
+                          <div key={idx} style={{
+                            position:'absolute', top: idx * 28 + 4,
+                            left:`${left}%`, width:`${barWidth}%`, minWidth:90,
+                            height:24, borderRadius:5,
+                            background:`var(${stageObj?.bgColor || '--n100'})`,
+                            border: tp.status==='confirmed'
+                              ? `1.5px solid var(${stageObj?.color || '--n400'})`
+                              : `1.5px dashed var(${stageObj?.color || '--n400'})`,
+                            display:'flex', alignItems:'center', gap:4, paddingLeft:6, paddingRight:4,
+                            overflow:'hidden', zIndex:2,
+                          }}>
+                            <span style={{
+                              width:6, height:6, borderRadius:6, flexShrink:0,
+                              background: sb.dot,
+                            }} />
+                            <span style={{
+                              fontSize:10, fontWeight:700,
+                              color:`var(${stageObj?.color || '--n600'})`,
+                              whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+                              flex:1,
+                            }}>{tp.name}</span>
+                            <span style={{
+                              fontSize:9, fontWeight:600, color:`var(${stageObj?.color || '--n600'})`,
+                              opacity:0.7, whiteSpace:'nowrap', flexShrink:0,
+                            }}>{tp.date}</span>
+                          </div>
+                        );
+                      })}
+
+                      {/* Undated (TBC) items */}
+                      {undated.length > 0 && (
+                        <div style={{
+                          position:'absolute', bottom:4, left:4, right:4,
+                          display:'flex', gap:4, flexWrap:'wrap',
+                        }}>
+                          {undated.map((tp, idx) => (
+                            <span key={idx} style={{
+                              fontSize:10, fontWeight:600, padding:'2px 8px', borderRadius:4,
+                              background:'var(--n50)', border:'1px dashed var(--n300)',
+                              color:'var(--blueberry-900)', fontStyle:'italic',
+                            }}>
+                              {tp.name} — TBC
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </React.Fragment>
+                );
+              });
+            })()}
+          </div>
+
+          {/* Legend */}
+          <div style={{ display:'flex', gap:16, marginTop:12, alignItems:'center', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+              <div style={{ width:24, height:10, borderRadius:3, background:'var(--blueberry-50)', border:'1.5px solid var(--blueberry-1000)' }} />
+              <span style={{ fontSize:10, color:'var(--n500)', fontWeight:600 }}>Confirmed</span>
+            </div>
+            <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+              <div style={{ width:24, height:10, borderRadius:3, background:'var(--peach-50)', border:'1.5px dashed var(--peach-1000)' }} />
+              <span style={{ fontSize:10, color:'var(--n500)', fontWeight:600 }}>TBC</span>
+            </div>
+            <div style={{ width:1, height:14, background:'var(--n200)' }} />
+            {STAGES.map(s => (
+              <div key={s.id} style={{ display:'flex', alignItems:'center', gap:3 }}>
+                <div style={{ width:8, height:8, borderRadius:2, background:`var(${s.bgColor})`, border:`1px solid var(${s.color})` }} />
+                <span style={{ fontSize:10, color:'var(--n500)', fontWeight:600 }}>{s.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Summary cards ── */}
+      <div style={{
+        maxWidth:1680, margin:'12px auto 0',
+        display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:8,
+      }}>
+        {['prospect','client'].map(aud => {
+          const count = touchpoints.filter(t=>t.audience===aud).length;
+          const conf = touchpoints.filter(t=>t.audience===aud && t.status==='confirmed').length;
+          return (
+            <div key={aud} style={{
+              padding:'11px 14px', borderRadius:10,
+              background:'var(--wh)', border:'1px solid var(--n100)',
+            }}>
+              <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.4px', color:`var(${audienceColor[aud]})`, marginBottom:3 }}>
+                {audienceLabel[aud]} journey
+              </div>
+              <div style={{ fontSize:20, fontWeight:800, color:'var(--bk)' }}>{count}</div>
+              <div style={{ fontSize:11, color:'var(--n500)' }}>
+                {conf} confirmed &middot; {count - conf} TBC
+              </div>
+            </div>
+          );
+        })}
+        <div style={{ padding:'11px 14px', borderRadius:10, background:'var(--wh)', border:'1px solid var(--n100)' }}>
+          <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.4px', color:'var(--n500)', marginBottom:3 }}>
+            Channels active
+          </div>
+          <div style={{ fontSize:20, fontWeight:800, color:'var(--bk)' }}>
+            {Object.keys(CHANNELS).filter(ch => touchpoints.some(t=>t.channel===ch)).length}
+          </div>
+          <div style={{ fontSize:11, color:'var(--n500)' }}>across {STAGES.length} stages</div>
+        </div>
+        <div style={{ padding:'11px 14px', borderRadius:10, background:'var(--wh)', border:'1px solid var(--n100)' }}>
+          <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.4px', color:'var(--n500)', marginBottom:3 }}>
+            Readiness
+          </div>
+          <div style={{ fontSize:20, fontWeight:800, color:'var(--bk)' }}>
+            {Math.round((touchpoints.filter(t=>t.status==='confirmed').length / touchpoints.length) * 100)}%
+          </div>
+          <div style={{ fontSize:11, color:'var(--n500)' }}>touchpoints confirmed</div>
+        </div>
+      </div>
+
+      {/* ── Messaging + Guardrails ── */}
+      <div style={{
+        maxWidth:1680, margin:'12px auto 0',
+        display:'grid', gridTemplateColumns:'1fr 1fr', gap:8,
+      }}>
+        <div style={{
+          padding:'11px 14px', borderRadius:10,
+          background:'var(--wh)', borderLeft:'3px solid var(--bk)',
+        }}>
+          <div style={{ fontSize:10, fontWeight:700, color:'var(--n500)', textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:2 }}>
+            Messaging angle
+          </div>
+          <div style={{ fontSize:13, color:'var(--bk)', fontWeight:600 }}>
+            Your card spend, rewarded — effortless cashback on every transaction
+          </div>
+        </div>
+        <div style={{
+          padding:'11px 14px', borderRadius:10,
+          background:'var(--peach-50)', borderLeft:'3px solid var(--peach-900)',
+        }}>
+          <div style={{ fontSize:10, fontWeight:700, color:'var(--peach-1000)', textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:2 }}>
+            Guardrails
+          </div>
+          <div style={{ fontSize:13, color:'var(--peach-1000)', fontWeight:600 }}>
+            Avoid teasing future rate changes. Cap disclosure required on paid channels. Rate/cap/exclusions mandatory.
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ maxWidth:1680, margin:'16px auto 0', textAlign:'center', color:'var(--n400)', fontSize:11 }}>
+        Cashback — X / Plus cards — Q2-Q3 2026 &middot; PMM team &middot; DE, ES, NL &middot;
+        Data sourced from Notion &middot; Hover touchpoints for objectives &amp; key messages
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
